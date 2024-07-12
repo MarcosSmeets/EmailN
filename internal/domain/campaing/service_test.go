@@ -2,6 +2,7 @@ package campaing
 
 import (
 	"emailn/internal/contract"
+	internalerros "emailn/internal/internalErros"
 	"errors"
 	"testing"
 
@@ -15,9 +16,9 @@ type repositoryMock struct {
 
 var (
 	newCampaing = contract.NewCampaing{
-		Name:    "Y",
-		Content: "Body",
-		Emails:  []string{"teste@teste", "teste2@teste"},
+		Name:    "teste Y",
+		Content: "Body teste",
+		Emails:  []string{"teste@teste.com", "teste2@teste.com"},
 	}
 	// repository = new(repositoryMock)
 	service = Service{}
@@ -30,6 +31,9 @@ func (r *repositoryMock) Save(campaing *Campaing) error {
 
 func Test_Create_Campaing(t *testing.T) {
 	assert := assert.New(t)
+	repositoryMock := new(repositoryMock)
+	repositoryMock.On("Save", mock.Anything).Return(nil)
+	service.Repository = repositoryMock
 
 	id, err := service.Create(newCampaing)
 
@@ -39,12 +43,11 @@ func Test_Create_Campaing(t *testing.T) {
 
 func Test_Create_ValidateCampaingError(t *testing.T) {
 	assert := assert.New(t)
-	newCampaing.Name = ""
 
-	_, err := service.Create(newCampaing)
+	_, err := service.Create(contract.NewCampaing{})
 
 	assert.NotNil(err)
-	assert.Equal("name is required", err.Error())
+	assert.False(errors.Is(internalerros.ErrInternal, err))
 }
 
 func Test_Create_SaveCampaing(t *testing.T) {
@@ -71,5 +74,5 @@ func Test_Create_ValidateRepositorySave(t *testing.T) {
 
 	_, err := service.Create(newCampaing)
 
-	assert.Equal("error to save on database", err.Error())
+	assert.True(errors.Is(internalerros.ErrInternal, err))
 }
